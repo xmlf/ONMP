@@ -5,7 +5,7 @@
 # @Last Modified time: 2019-06-09 11:39:26
 
 # 软件包列表
-pkglist="wget unzip grep sed tar ca-certificates coreutils-whoami php7 php7-cgi php7-cli php7-fastcgi php7-fpm php7-mod-mysqli php7-mod-pdo php7-mod-pdo-mysql nginx-extras mariadb-server mariadb-server-extra mariadb-client mariadb-client-extra"
+pkglist="php7-fpm php7-mod-mysqli php7-mod-pdo php7-mod-pdo-mysql nginx-extras"
 
 phpmod="php7-mod-calendar php7-mod-ctype php7-mod-curl php7-mod-dom php7-mod-exif php7-mod-fileinfo php7-mod-ftp php7-mod-gd php7-mod-gettext php7-mod-gmp php7-mod-hash php7-mod-iconv php7-mod-intl php7-mod-json php7-mod-ldap php7-mod-session php7-mod-mbstring php7-mod-opcache php7-mod-openssl php7-mod-pcntl php7-mod-phar php7-pecl-redis php7-mod-session php7-mod-shmop php7-mod-simplexml php7-mod-snmp php7-mod-soap php7-mod-sockets php7-mod-sqlite3 php7-mod-sysvmsg php7-mod-sysvsem php7-mod-sysvshm php7-mod-tokenizer php7-mod-xml php7-mod-xmlreader php7-mod-xmlwriter php7-mod-zip php7-pecl-dio php7-pecl-http php7-pecl-libevent php7-pecl-propro php7-pecl-raphf redis snmpd snmp-mibs snmp-utils zoneinfo-core zoneinfo-asia"
 
@@ -139,17 +139,17 @@ init_onmp()
     init_nginx > /dev/null 2>&1
 
     # 初始化数据库
-    init_sql > /dev/null 2>&1
+    #init_sql > /dev/null 2>&1
 
     # 初始化PHP
     init_php > /dev/null 2>&1
 
     # 初始化redis
-    echo 'unixsocket /opt/var/run/redis.sock' >> /opt/etc/redis.conf
-    echo 'unixsocketperm 777' >> /opt/etc/redis.conf 
+  #  echo 'unixsocket /opt/var/run/redis.sock' >> /opt/etc/redis.conf
+  #  echo 'unixsocketperm 777' >> /opt/etc/redis.conf 
 
     # 添加探针
-    cp /opt/onmp/tz.php /opt/wwwroot/default -R
+   # cp /opt/onmp/tz.php /opt/wwwroot/default -R
     add_vhost 81 default
     sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/default.conf
     chmod -R 777 /opt/wwwroot/default
@@ -171,14 +171,19 @@ init_nginx()
 
 # 初始化nginx配置文件
 cat > "/opt/etc/nginx/nginx.conf" <<-\EOF
-user theOne root;
+user www www;
 pid /opt/var/run/nginx.pid;
 worker_processes auto;
+worker_cpu_affinity auto;
+worker_rlimit_nofile 51200;
+error_log  /opt/var/log/nginx_error.log  crit;
 
 events {
     use epoll;
-    multi_accept on;
-    worker_connections 1024;
+    worker_connections 51200;
+    multi_accept off;
+    accept_mutex off;
+
 }
 
 http {
@@ -189,7 +194,7 @@ http {
     sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
-    keepalive_timeout 60;
+    keepalive_timeout 60s;
     
     client_max_body_size 2000m;
     client_body_temp_path /opt/tmp/;
@@ -199,7 +204,7 @@ http {
     gzip_proxied any;
     gzip_min_length 1k;
     gzip_buffers 4 8k;
-    gzip_comp_level 2;
+    gzip_comp_level 6;
     gzip_disable "msie6";
     gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
 
@@ -207,7 +212,7 @@ http {
 }
 EOF
 
-sed -e "s/theOne/$username/g" -i /opt/etc/nginx/nginx.conf
+#sed -e "s/theOne/$username/g" -i /opt/etc/nginx/nginx.conf
 
 # 特定程序的nginx配置
 nginx_special_conf
@@ -480,20 +485,20 @@ sed -e "s/theOne/$username/g" -i /opt/etc/mysql/my.cnf
 
 chmod 644 /opt/etc/mysql/my.cnf
 
-mkdir -p /opt/var/mysql
+#mkdir -p /opt/var/mysql
 
 # 数据库安装
-/opt/bin/mysql_install_db --user=$username --basedir=/opt --datadir=/opt/var/mysql/
-echo -e "\n正在初始化数据库，请稍等1分钟"
-sleep 20
+#/opt/bin/mysql_install_db --user=$username --basedir=/opt --datadir=/opt/var/mysql/
+#echo -e "\n正在初始化数据库，请稍等1分钟"
+#sleep 20
 
 # 初次启动MySQL
-/opt/etc/init.d/S70mysqld start
-sleep 60
+#/opt/etc/init.d/S70mysqld start
+#sleep 60
 
 # 设置数据库密码
-mysqladmin -u root password 123456
-echo -e "\033[41;37m 数据库用户：root, 初始密码：123456 \033[0m"
+#mysqladmin -u root password 123456
+#echo -e "\033[41;37m 数据库用户：root, 初始密码：123456 \033[0m"
 onmp restart
 }
 
@@ -507,11 +512,11 @@ mkdir -p /opt/usr/php/tmp/
 chmod -R 777 /opt/usr/php/tmp/
 
 sed -e "/^doc_root/d" -i /opt/etc/php.ini
-sed -e "s/.*memory_limit = .*/memory_limit = 128M/g" -i /opt/etc/php.ini
+sed -e "s/.*memory_limit = .*/memory_limit = 256M/g" -i /opt/etc/php.ini
 sed -e "s/.*output_buffering = .*/output_buffering = 4096/g" -i /opt/etc/php.ini
-sed -e "s/.*post_max_size = .*/post_max_size = 8000M/g" -i /opt/etc/php.ini
-sed -e "s/.*max_execution_time = .*/max_execution_time = 2000 /g" -i /opt/etc/php.ini
-sed -e "s/.*upload_max_filesize.*/upload_max_filesize = 8000M/g" -i /opt/etc/php.ini
+sed -e "s/.*post_max_size = .*/post_max_size = 20M/g" -i /opt/etc/php.ini
+sed -e "s/.*max_execution_time = .*/max_execution_time = 120 /g" -i /opt/etc/php.ini
+sed -e "s/.*upload_max_filesize.*/upload_max_filesize = 2M/g" -i /opt/etc/php.ini
 sed -e "s/.*listen.mode.*/listen.mode = 0666/g" -i /opt/etc/php7-fpm.d/www.conf
 
 # PHP配置文件
@@ -520,7 +525,7 @@ session.save_path = "/opt/usr/php/tmp/"
 opcache.enable=1
 opcache.enable_cli=1
 opcache.interned_strings_buffer=8
-opcache.max_accelerated_files=10000
+opcache.max_accelerated_files=4000
 opcache.memory_consumption=128
 opcache.save_comments=1
 opcache.revalidate_freq=60
@@ -552,11 +557,12 @@ set_passwd()
 ################ 卸载onmp ###############
 remove_onmp()
 {
-    /opt/etc/init.d/S70mysqld stop > /dev/null 2>&1
+   # /opt/etc/init.d/S70mysqld stop > /dev/null 2>&1
     /opt/etc/init.d/S79php7-fpm stop > /dev/null 2>&1
     /opt/etc/init.d/S80nginx stop > /dev/null 2>&1
-    /opt/etc/init.d/S70redis stop > /dev/null 2>&1
-    killall -9 nginx mysqld php-fpm redis-server > /dev/null 2>&1
+   # /opt/etc/init.d/S70redis stop > /dev/null 2>&1
+   #killall -9 nginx mysqld php-fpm redis-server > /dev/null 2>&1
+    killall -9 nginx php-fpm  > /dev/null 2>&1
     for pkg in $pkglist; do
         opkg remove $pkg --force-depends
     done
@@ -606,17 +612,17 @@ vhost_list()
 
 onmp_restart()
 {
-    /opt/etc/init.d/S70mysqld stop > /dev/null 2>&1
+   # /opt/etc/init.d/S70mysqld stop > /dev/null 2>&1
     /opt/etc/init.d/S79php7-fpm stop > /dev/null 2>&1
     /opt/etc/init.d/S80nginx stop > /dev/null 2>&1
-    killall -9 nginx mysqld php-fpm > /dev/null 2>&1
+    killall -9 nginx php-fpm > /dev/null 2>&1
     sleep 3
-    /opt/etc/init.d/S70mysqld start > /dev/null 2>&1
+    #/opt/etc/init.d/S70mysqld start > /dev/null 2>&1
     /opt/etc/init.d/S79php7-fpm start > /dev/null 2>&1
     /opt/etc/init.d/S80nginx start > /dev/null 2>&1
     sleep 3
     num=0
-    for PROC in 'nginx' 'php-fpm' 'mysqld'; do 
+    for PROC in 'nginx' 'php-fpm'; do 
         if [ -n "`pidof $PROC`" ]; then
             echo $PROC "启动成功";
         else
@@ -649,7 +655,7 @@ case $1 in
     stop )
     echo "onmp正在停止"
     logger -t "【ONMP】" "正在停止"
-    /opt/etc/init.d/S70mysqld stop > /dev/null 2>&1
+ #   /opt/etc/init.d/S70mysqld stop > /dev/null 2>&1
     /opt/etc/init.d/S79php7-fpm stop > /dev/null 2>&1
     /opt/etc/init.d/S80nginx stop > /dev/null 2>&1
     echo "onmp已停止"
