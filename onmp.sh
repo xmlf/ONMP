@@ -520,6 +520,7 @@ sed -e "s/.*post_max_size = .*/post_max_size = 20M/g" -i /opt/etc/php.ini
 sed -e "s/.*max_execution_time = .*/max_execution_time = 120 /g" -i /opt/etc/php.ini
 sed -e "s/.*upload_max_filesize.*/upload_max_filesize = 2M/g" -i /opt/etc/php.ini
 sed -e "s/.*listen.mode.*/listen.mode = 0666/g" -i /opt/etc/php7-fpm.d/www.conf
+sed -e "s/user = nobody/user = www/g" -i /opt/etc/php7-fpm.d/www.conf
 
 # PHP配置文件
 cat >> "/opt/etc/php.ini" <<-\PHPINI
