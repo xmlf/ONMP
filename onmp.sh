@@ -95,6 +95,8 @@ install_php_mod()
 ############## 安装软件包 #############
 install_onmp_ipk()
 {
+    groupadd www
+    useradd -s /sbin/nologin -g www www
     opkg update
 
     # 软件包状态检测
