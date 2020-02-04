@@ -95,7 +95,7 @@ install_php_mod()
 ############## 安装软件包 #############
 install_onmp_ipk()
 {
-    groupadd www
+    addgroup www
     useradd -s /sbin/nologin -g www www
     opkg update
 
