@@ -7,7 +7,7 @@
 # 软件包列表
 pkglist="php7-fpm php7-mod-mysqli php7-mod-pdo php7-mod-pdo-mysql nginx-extras"
 
-phpmod="php7-mod-calendar php7-mod-ctype php7-mod-curl php7-mod-dom php7-mod-exif php7-mod-fileinfo php7-mod-filter php7-mod-ftp php7-mod-gd php7-mod-gettext php7-mod-gmp php7-mod-hash php7-mod-iconv php7-mod-intl php7-mod-json php7-mod-ldap php7-mod-session php7-mod-mbstring php7-mod-opcache php7-mod-openssl php7-mod-pcntl php7-mod-phar php7-pecl-redis php7-mod-session php7-mod-shmop php7-mod-simplexml php7-mod-snmp php7-mod-soap php7-mod-sockets php7-mod-sqlite3 php7-mod-sysvmsg php7-mod-sysvsem php7-mod-sysvshm php7-mod-tokenizer php7-mod-xml php7-mod-xmlreader php7-mod-xmlwriter php7-mod-zip php7-pecl-dio php7-pecl-http php7-pecl-libevent php7-pecl-propro php7-pecl-raphf zoneinfo-core zoneinfo-asia"
+phpmod="php7-mod-calendar php7-mod-ctype php7-mod-curl php7-mod-dom php7-mod-exif php7-mod-fileinfo php7-mod-filter php7-mod-ftp php7-mod-gd php7-mod-gettext php7-mod-gmp php7-mod-hash php7-mod-iconv php7-mod-intl php7-mod-imap php7-mod-json php7-mod-ldap php7-mod-session php7-mod-mbstring php7-mod-opcache php7-mod-openssl php7-mod-pcntl php7-mod-phar php7-mod-session php7-mod-shmop php7-mod-simplexml php7-mod-snmp php7-mod-soap php7-mod-sockets php7-mod-sqlite3 php7-mod-sysvmsg php7-mod-sysvsem php7-mod-sysvshm php7-mod-tokenizer php7-mod-xml php7-mod-xmlreader php7-mod-xmlwriter php7-mod-zip php7-pecl-dio php7-pecl-http php7-pecl-libevent php7-pecl-propro php7-pecl-raphf zoneinfo-core zoneinfo-asia"
 
 # 后续可能增加的包(缺少源支持)
 # php7-mod-imagick imagemagick imagemagick-jpeg imagemagick-png imagemagick-tiff imagemagick-tools
@@ -517,10 +517,14 @@ sed -e "/^doc_root/d" -i /opt/etc/php.ini
 sed -e "s/.*memory_limit = .*/memory_limit = 256M/g" -i /opt/etc/php.ini
 sed -e "s/.*output_buffering = .*/output_buffering = 4096/g" -i /opt/etc/php.ini
 sed -e "s/.*post_max_size = .*/post_max_size = 20M/g" -i /opt/etc/php.ini
+sed -e "s/.*disable_functions = .*/disable_functions = passthru,exec,system,chroot,chgrp,chown,shell_exec,proc_open,proc_get_status,popen,ini_alter,ini_restore,dl,openlog,syslog,readlink,symlink,popepassthru,stream_socket_server/g" -i /opt/etc/php.ini
+
 sed -e "s/.*max_execution_time = .*/max_execution_time = 120 /g" -i /opt/etc/php.ini
 sed -e "s/.*upload_max_filesize.*/upload_max_filesize = 2M/g" -i /opt/etc/php.ini
 sed -e "s/.*listen.mode.*/listen.mode = 0666/g" -i /opt/etc/php7-fpm.d/www.conf
 sed -e "s/user = nobody/user = www/g" -i /opt/etc/php7-fpm.d/www.conf
+cp /opt/bin/php-fpm /opt/bin/php7-fpm
+sed -e "s/PROCS=php-fpm/PROCS=php7-fpm/g" -i /opt/etc/init.d/S79php7-fpm
 
 # PHP配置文件
 cat >> "/opt/etc/php.ini" <<-\PHPINI
@@ -537,6 +541,38 @@ opcache.fast_shutdown=1
 mysqli.default_socket=/opt/var/run/mysqld.sock
 pdo_mysql.default_socket=/opt/var/run/mysqld.sock
 PHPINI
+
+mv /opt/etc/php7-fpm.conf /opt/etc/php7-fpm.conf.bak
+cat >> "/opt/etc/php7-fpm.conf" <<-\PHPFPMCONF
+[global]
+pid = /opt/var/run/php7-fpm.pid
+error_log = /opt/var/log/php7-fpm.log
+log_level = notice
+
+[www]
+listen = /opt/var/run/php7-fpm.sock
+listen.backlog = -1
+listen.allowed_clients = 127.0.0.1
+listen.owner = www
+listen.group = www
+listen.mode = 0666
+user = www
+group = www
+pm = dynamic
+pm.max_children = 10
+pm.start_servers = 2
+pm.min_spare_servers = 2
+pm.max_spare_servers = 10
+pm.max_requests = 1024
+pm.process_idle_timeout = 10s
+request_terminate_timeout = 100
+request_slowlog_timeout = 0
+env[HOSTNAME] = $HOSTNAME
+env[PATH] = /opt/bin:/usr/local/bin:/usr/bin:/bin
+env[TMP] = /opt/tmp
+env[TMPDIR] = /opt/tmp
+env[TEMP] = /opt/tmp
+PHPFPMCONF
 
 cat >> "/opt/etc/php7-fpm.d/www.conf" <<-\PHPFPM
 env[HOSTNAME] = $HOSTNAME
