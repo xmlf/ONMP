@@ -7,41 +7,11 @@
 # 软件包列表
 pkglist="php7-fpm php7-mod-mysqli php7-mod-pdo php7-mod-pdo-mysql nginx-extras"
 
-phpmod="php7-mod-calendar php7-mod-ctype php7-mod-curl php7-mod-dom php7-mod-exif php7-mod-fileinfo php7-mod-filter php7-mod-ftp php7-mod-gd php7-mod-gettext php7-mod-gmp php7-mod-hash php7-mod-iconv php7-mod-intl php7-mod-imap php7-mod-json php7-mod-ldap php7-mod-session php7-mod-mbstring php7-mod-opcache php7-mod-openssl php7-mod-pcntl php7-mod-phar php7-mod-session php7-mod-shmop php7-mod-simplexml php7-mod-snmp php7-mod-soap php7-mod-sockets php7-mod-sqlite3 php7-mod-sysvmsg php7-mod-sysvsem php7-mod-sysvshm php7-mod-tokenizer php7-mod-xml php7-mod-xmlreader php7-mod-xmlwriter php7-mod-zip php7-pecl-dio php7-pecl-http php7-pecl-libevent php7-pecl-propro php7-pecl-raphf zoneinfo-core zoneinfo-asia"
+phpmod="php7-mod-gd php7-mod-calendar php7-mod-ctype php7-mod-curl php7-mod-dom php7-mod-exif php7-mod-fileinfo php7-mod-filter php7-mod-ftp php7-mod-gettext php7-mod-hash php7-mod-iconv php7-mod-intl php7-mod-json php7-mod-session php7-mod-mbstring php7-mod-opcache php7-mod-openssl php7-mod-pcntl php7-mod-phar php7-mod-session php7-mod-shmop php7-mod-simplexml php7-mod-snmp php7-mod-soap php7-mod-sockets php7-mod-sqlite3 php7-mod-sysvmsg php7-mod-sysvsem php7-mod-tokenizer php7-mod-xml php7-mod-xmlreader php7-mod-xmlwriter php7-mod-zip php7-pecl-raphf zoneinfo-core zoneinfo-asia"
 
 # 后续可能增加的包(缺少源支持)
 # php7-mod-imagick imagemagick imagemagick-jpeg imagemagick-png imagemagick-tiff imagemagick-tools
 
-# Web程序
-# (1) phpMyAdmin（数据库管理工具）
-url_phpMyAdmin="https://files.phpmyadmin.net/phpMyAdmin/4.8.3/phpMyAdmin-4.8.3-all-languages.zip"
-
-# (2) WordPress（使用最广泛的CMS）
-url_WordPress="https://cn.wordpress.org/wordpress-4.9.4-zh_CN.zip"
-
-# (3) Owncloud（经典的私有云）
-url_Owncloud="https://download.owncloud.org/community/owncloud-10.0.10.zip"
-
-# (4) Nextcloud（Owncloud团队的新作，美观强大的个人云盘）
-url_Nextcloud="https://download.nextcloud.com/server/releases/nextcloud-13.0.6.zip"
-
-# (5) h5ai（优秀的文件目录）
-url_h5ai="https://release.larsjung.de/h5ai/h5ai-0.29.0.zip"
-
-# (6) Lychee（一个很好看，易于使用的Web相册）
-url_Lychee="https://github.com/electerious/Lychee/archive/master.zip"
-
-# (7) Kodexplorer（可道云aka芒果云在线文档管理器）
-url_Kodexplorer="http://static.kodcloud.com/update/download/kodexplorer4.36.zip"
-
-# (8) Typecho (流畅的轻量级开源博客程序)
-url_Typecho="http://typecho.org/downloads/1.1-17.10.30-release.tar.gz"
-
-# (9) Z-Blog (体积小，速度快的PHP博客程序)
-url_Zblog="https://update.zblogcn.com/zip/Z-BlogPHP_1_5_2_1935_Zero.zip"
-
-# (10) DzzOffice (开源办公平台)
-url_DzzOffice="https://codeload.github.com/zyx0814/dzzoffice/zip/master"
 
 # 通用环境变量获取
 get_env()
@@ -235,200 +205,6 @@ location ~ \.php(?:$|/) {
 }
 OOO
 
-# nextcloud
-cat > "/opt/etc/nginx/conf/nextcloud.conf" <<-\OOO
-add_header X-Content-Type-Options nosniff;
-add_header X-XSS-Protection "1; mode=block";
-add_header X-Robots-Tag none;
-add_header X-Download-Options noopen;
-add_header X-Permitted-Cross-Domain-Policies none;
-
-location = /robots.txt {
-    allow all;
-    log_not_found off;
-    access_log off;
-}
-location = /.well-known/carddav {
-    return 301 $scheme://$host/remote.php/dav;
-}
-location = /.well-known/caldav {
-    return 301 $scheme://$host/remote.php/dav;
-}
-
-fastcgi_buffers 64 4K;
-gzip on;
-gzip_vary on;
-gzip_comp_level 4;
-gzip_min_length 256;
-gzip_proxied expired no-cache no-store private no_last_modified no_etag auth;
-gzip_types application/atom+xml application/javascript application/json application/ld+json application/manifest+json application/rss+xml application/vnd.geo+json application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/bmp image/svg+xml image/x-icon text/cache-manifest text/css text/plain text/vcard text/vnd.rim.location.xloc text/vtt text/x-component text/x-cross-domain-policy;
-
-location / {
-    rewrite ^ /index.php$request_uri;
-}
-location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)/ {
-    deny all;
-}
-location ~ ^/(?:\.|autotest|occ|issue|indie|db_|console) {
-    deny all;
-}
-
-location ~ ^/(?:index|remote|public|cron|core/ajax/update|status|ocs/v[12]|updater/.+|ocs-provider/.+)\.php(?:$|/) {
-    fastcgi_split_path_info ^(.+?\.php)(/.*)$;
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_param PATH_INFO $fastcgi_path_info;
-    fastcgi_param modHeadersAvailable true;
-    fastcgi_param front_controller_active true;
-    fastcgi_pass unix:/opt/var/run/php7-fpm.sock;
-    fastcgi_intercept_errors on;
-    fastcgi_request_buffering off;
-}
-
-location ~ ^/(?:updater|ocs-provider)(?:$|/) {
-    try_files $uri/ =404;
-    index index.php;
-}
-
-location ~ \.(?:css|js|woff|svg|gif)$ {
-    try_files $uri /index.php$request_uri;
-    add_header Cache-Control "public, max-age=15778463";
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Robots-Tag none;
-    add_header X-Download-Options noopen;
-    add_header X-Permitted-Cross-Domain-Policies none;
-    access_log off;
-}
-
-location ~ \.(?:png|html|ttf|ico|jpg|jpeg)$ {
-    try_files $uri /index.php$request_uri;
-    access_log off;
-}
-OOO
-
-# owncloud
-cat > "/opt/etc/nginx/conf/owncloud.conf" <<-\OOO
-add_header X-Content-Type-Options nosniff;
-add_header X-Frame-Options "SAMEORIGIN";
-add_header X-XSS-Protection "1; mode=block";
-add_header X-Robots-Tag none;
-add_header X-Download-Options noopen;
-add_header X-Permitted-Cross-Domain-Policies none;
-
-location = /robots.txt {
-    allow all;
-    log_not_found off;
-    access_log off;
-}
-location = /.well-known/carddav {
-    return 301 $scheme://$host/remote.php/dav;
-}
-location = /.well-known/caldav {
-    return 301 $scheme://$host/remote.php/dav;
-}
-
-gzip off;
-fastcgi_buffers 8 4K; 
-fastcgi_ignore_headers X-Accel-Buffering;
-error_page 403 /core/templates/403.php;
-error_page 404 /core/templates/404.php;
-
-location / {
-    rewrite ^ /index.php$uri;
-}
-
-location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)/ {
-    return 404;
-}
-location ~ ^/(?:\.|autotest|occ|issue|indie|db_|console) {
-    return 404;
-}
-
-location ~ ^/(?:index|remote|public|cron|core/ajax/update|status|ocs/v[12]|updater/.+|ocs-provider/.+|core/templates/40[34])\.php(?:$|/) {
-    fastcgi_split_path_info ^(.+\.php)(/.*)$;
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_param SCRIPT_NAME $fastcgi_script_name;
-    fastcgi_param PATH_INFO $fastcgi_path_info;
-    fastcgi_param modHeadersAvailable true;
-    fastcgi_param front_controller_active true;
-    fastcgi_read_timeout 180;
-    fastcgi_pass unix:/opt/var/run/php7-fpm.sock;
-    fastcgi_intercept_errors on;
-    fastcgi_request_buffering on;
-}
-
-location ~ ^/(?:updater|ocs-provider)(?:$|/) {
-    try_files $uri $uri/ =404;
-    index index.php;
-}
-
-location ~ \.(?:css|js)$ {
-    try_files $uri /index.php$uri$is_args$args;
-    add_header Cache-Control "max-age=15778463";
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Robots-Tag none;
-    add_header X-Download-Options noopen;
-    add_header X-Permitted-Cross-Domain-Policies none;
-    access_log off;
-}
-
-location ~ \.(?:svg|gif|png|html|ttf|woff|ico|jpg|jpeg|map)$ {
-    add_header Cache-Control "public, max-age=7200";
-    try_files $uri /index.php$uri$is_args$args;
-    access_log off;
-}
-OOO
-
-# wordpress
-cat > "/opt/etc/nginx/conf/wordpress.conf" <<-\OOO
-location = /favicon.ico {
-    log_not_found off;
-    access_log off;
-}
-location = /robots.txt {
-    allow all;
-    log_not_found off;
-    access_log off;
-}
-location ~ /\. {
-    deny all;
-}
-location ~ ^/wp-content/uploads/.*\.php$ {
-    deny all;
-}
-location ~* /(?:uploads|files)/.*\.php$ {
-    deny all;
-}
-
-location / {
-    try_files $uri $uri/ /index.php?$args;
-}
-
-location ~ \.php$ {
-    include fastcgi.conf;
-    fastcgi_intercept_errors on;
-    fastcgi_pass unix:/opt/var/run/php7-fpm.sock;
-    fastcgi_buffers 16 16k;
-    fastcgi_buffer_size 32k;
-}
-
-location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
-    expires max;
-    log_not_found off;
-}
-OOO
-
-# typecho
-cat > "/opt/etc/nginx/conf/typecho.conf" <<-\OOO
-if (!-e $request_filename) {
-        rewrite ^(.*)$ /index.php$1 last;
-    }
-OOO
-
 }
 
 ############## 重置、初始化MySQL #############
@@ -516,13 +292,13 @@ chmod -R 777 /opt/usr/php/tmp/
 sed -e "/^doc_root/d" -i /opt/etc/php.ini
 sed -e "s/.*memory_limit = .*/memory_limit = 256M/g" -i /opt/etc/php.ini
 sed -e "s/.*output_buffering = .*/output_buffering = 4096/g" -i /opt/etc/php.ini
-sed -e "s/.*post_max_size = .*/post_max_size = 20M/g" -i /opt/etc/php.ini
-sed -e "s/.*disable_functions = .*/disable_functions = passthru,exec,system,chroot,chgrp,chown,shell_exec,proc_open,proc_get_status,popen,ini_alter,ini_restore,dl,openlog,syslog,readlink,symlink,popepassthru,stream_socket_server/g" -i /opt/etc/php.ini
-
-sed -e "s/.*max_execution_time = .*/max_execution_time = 120 /g" -i /opt/etc/php.ini
-sed -e "s/.*upload_max_filesize.*/upload_max_filesize = 2M/g" -i /opt/etc/php.ini
-sed -e "s/.*listen.mode.*/listen.mode = 0666/g" -i /opt/etc/php7-fpm.d/www.conf
-sed -e "s/user = nobody/user = www/g" -i /opt/etc/php7-fpm.d/www.conf
+sed -i 's/post_max_size =.*/post_max_size = 2M/g' /opt/etc/php.ini
+sed -i 's/upload_max_filesize =.*/upload_max_filesize = 50M/g' /opt/etc/php.ini
+sed -i 's/;date.timezone =.*/date.timezone = PRC/g' /opt/etc/php.ini
+sed -i 's/short_open_tag =.*/short_open_tag = On/g' /opt/etc/php.ini
+sed -i 's/;cgi.fix_pathinfo=.*/cgi.fix_pathinfo=0/g' /opt/etc/php.ini
+sed -i 's/max_execution_time =.*/max_execution_time = 120/g' /opt/etc/php.ini
+sed -i 's/disable_functions =.*/disable_functions = passthru,exec,system,chroot,chgrp,chown,shell_exec,proc_open,proc_get_status,popen,ini_alter,ini_restore,dl,openlog,syslog,readlink,symlink,popepassthru,stream_socket_server/g' /opt/etc/php.ini
 cp /opt/bin/php-fpm /opt/bin/php7-fpm
 sed -e "s/PROCS=php-fpm/PROCS=php7-fpm/g" -i /opt/etc/init.d/S79php7-fpm
 
@@ -543,7 +319,7 @@ pdo_mysql.default_socket=/opt/var/run/mysqld.sock
 PHPINI
 
 mv /opt/etc/php7-fpm.conf /opt/etc/php7-fpm.conf.bak
-cat >> "/opt/etc/php7-fpm.conf" <<-\PHPFPMCONF
+cat > "/opt/etc/php7-fpm.conf" <<-\PHPFPMCONF
 [global]
 pid = /opt/var/run/php7-fpm.pid
 error_log = /opt/var/log/php7-fpm.log
@@ -932,258 +708,6 @@ fi
 #     echo "浏览器地址栏输入：$localhost:$port 即可访问"
 # }
 
-############# 安装phpMyAdmin ############
-install_phpmyadmin()
-{
-    # 默认配置
-    filelink=$url_phpMyAdmin
-    name="phpMyAdmin"
-    dirname="phpMyAdmin-*-languages"
-    port=82
-
-    # 运行安装程序
-    web_installer 
-    echo "正在配置$name..."
-    cp /opt/wwwroot/$webdir/config.sample.inc.php /opt/wwwroot/$webdir/config.inc.php
-    chmod 644 /opt/wwwroot/$webdir/config.inc.php
-    mkdir -p /opt/wwwroot/$webdir/tmp
-    chmod 777 /opt/wwwroot/$webdir/tmp
-    sed -e "s/.*blowfish_secret.*/\$cfg['blowfish_secret'] = 'onmponmponmponmponmponmponmponmp';/g" -i /opt/wwwroot/$webdir/config.inc.php
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "phpMyaAdmin的用户、密码就是数据库用户、密码"
-}
-
-############# 安装WordPress ############
-install_wordpress()
-{
-    # 默认配置
-    filelink=$url_WordPress
-    name="WordPress"
-    dirname="wordpress"
-    port=83
-
-    # 运行安装程序
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    # WordPress的配置文件中有php-fpm了, 不需要外部引入
-    sed -e "s/.*\#otherconf.*/    include \/opt\/etc\/nginx\/conf\/wordpress.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "可以用phpMyaAdmin建立数据库，然后在这个站点上一步步配置网站信息"
-}
-
-############### 安装h5ai ##############
-install_h5ai()
-{
-    # 默认配置
-    filelink=$url_h5ai
-    name="h5ai"
-    dirname="_h5ai"
-    port=85
-    hookdir=$dirname
-
-    # 运行安装程序
-    web_installer
-    echo "正在配置$name..."
-    cp /opt/wwwroot/$webdir/_h5ai/README.md /opt/wwwroot/$webdir/
-    chmod -R 777 /opt/wwwroot/$webdir/
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    sed -e "s/.*\index index.html.*/    index  index.html  index.php  \/_h5ai\/public\/index.php;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "配置文件在/opt/wwwroot/$webdir/_h5ai/private/conf/options.json"
-    echo "你可以通过修改它来获取更多功能"
-}
-
-################ 安装Lychee ##############
-install_lychee()
-{
-    # 默认配置
-    filelink=$url_Lychee
-    name="Lychee"
-    dirname="Lychee-master"
-    port=86
-
-    # 运行安装程序
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir/uploads/ /opt/wwwroot/$webdir/data/
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "首次打开会要配置数据库信息"
-    echo "地址：127.0.0.1 用户、密码你自己设置的或者默认是root 123456"
-    echo "下面的可以不配置，然后下一步创建个用户就可以用了"
-}
-
-################# 安装Owncloud ###############
-install_owncloud()
-{
-    # 默认配置
-    filelink=$url_Owncloud     
-    name="Owncloud"         
-    dirname="owncloud"      
-    port=98
-
-    # 运行安装程序 
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    # Owncloud的配置文件中有php-fpm了, 不需要外部引入
-    sed -e "s/.*\#otherconf.*/    include \/opt\/etc\/nginx\/conf\/owncloud.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "首次打开会要配置用户和数据库信息"
-    echo "地址默认 localhost 用户、密码你自己设置的或者默认是root 123456"
-    echo "安装好之后可以点击左上角三条杠进入market安装丰富的插件，比如在线预览图片、视频等"
-    echo "需要先在 web 界面配置完成后，才能使用 onmp open 的第 10 个选项开启 Redis"
-}
-
-################# 安装Nextcloud ##############
-install_nextcloud()
-{
-    # 默认配置
-    filelink=$url_Nextcloud
-    name="Nextcloud"
-    dirname="nextcloud"
-    port=99
-
-    # 运行安装程序
-    web_installer   
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    # nextcloud的配置文件中有php-fpm了, 不需要外部引入
-    sed -e "s/.*\#otherconf.*/    include \/opt\/etc\/nginx\/conf\/nextcloud.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "首次打开会要配置用户和数据库信息"
-    echo "地址默认 localhost 用户、密码你自己设置的或者默认是root 123456"
-    echo "需要先在 web 界面配置完成后，才能使用 onmp open 的第 10 个选项开启 Redis"
-}
-
-############## 安装kodexplorer芒果云 ##########
-install_kodexplorer()
-{
-    # 默认配置
-    filelink=$url_Kodexplorer
-    name="Kodexplorer"
-    dirname="kodexplorer"
-    port=88
-    hookdir=$dirname
-
-    # 运行安装程序 
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-}
-
-############# 安装Typecho ############
-install_typecho()
-{
-    # 默认配置
-    filelink=$url_Typecho
-    name="Typecho"
-    dirname="build"
-    port=90
-    istar=true
-
-    # 运行安装程序 
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir 
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf         # 添加php-fpm支持
-    sed -e "s/.*\#otherconf.*/    include \/opt\/etc\/nginx\/conf\/typecho.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "可以用phpMyaAdmin建立数据库，然后在这个站点上一步步配置网站信息"
-}
-
-######## 安装Z-Blog ########
-install_zblog()
-{
-    # 默认配置
-    filelink=$url_Zblog
-    name="Zblog"
-    dirname="Z-BlogPHP_1_5_1_1740_Zero"
-    hookdir=$dirname
-    port=91
-
-    # 运行安装程序 
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir     # 目录权限看情况使用
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf         # 添加php-fpm支持
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-}
-
-######### 安装DzzOffice #########
-install_dzzoffice()
-{
-    # 默认配置
-    filelink=$url_DzzOffice
-    name="DzzOffice"
-    dirname="dzzoffice-master"
-    port=92
-
-    # 运行安装程序 
-    web_installer
-    echo "正在配置$name..."
-    chmod -R 777 /opt/wwwroot/$webdir     # 目录权限看情况使用
-
-    # 添加到虚拟主机
-    add_vhost $port $webdir
-    sed -e "s/.*\#php-fpm.*/    include \/opt\/etc\/nginx\/conf\/php-fpm.conf\;/g" -i /opt/etc/nginx/vhost/$webdir.conf         # 添加php-fpm支持
-    onmp restart >/dev/null 2>&1
-    echo "$name安装完成"
-    echo "浏览器地址栏输入：$localhost:$port 即可访问"
-    echo "DzzOffice应用市场中，某些应用无法自动安装的，请自行参看官网给的手动安装教程"
-}
-
 ############# 添加到虚拟主机 #############
 add_vhost()
 {
@@ -1193,7 +717,7 @@ server {
     listen 81;
     server_name localhost;
     root /opt/wwwroot/www/;
-    index index.html index.htm index.php tz.php;
+    index index.html index.htm index.php;
     #php-fpm
     #otherconf
 }
