@@ -60,6 +60,7 @@ install_php_mod()
             opkg install $data
         fi
     done
+    opkg install php7-mod-gd --force-overwrite
 }
 
 ############## 安装软件包 #############
