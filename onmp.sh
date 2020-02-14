@@ -5,7 +5,7 @@
 # @Last Modified time: 2019-06-09 11:39:26
 
 # 软件包列表
-pkglist="php7-fpm php7-mod-mysqli php7-mod-pdo php7-mod-pdo-mysql nginx-extras"
+pkglist="php7-fpm php7-mod-mysqli php7-mod-pdo php7-mod-pdo-mysql nginx"
 
 phpmod="php7-mod-gd php7-mod-calendar php7-mod-ctype php7-mod-curl php7-mod-dom php7-mod-exif php7-mod-fileinfo php7-mod-filter php7-mod-ftp php7-mod-gettext php7-mod-hash php7-mod-iconv php7-mod-intl php7-mod-json php7-mod-session php7-mod-mbstring php7-mod-opcache php7-mod-openssl php7-mod-pcntl php7-mod-phar php7-mod-session php7-mod-shmop php7-mod-simplexml php7-mod-snmp php7-mod-soap php7-mod-sockets php7-mod-sqlite3 php7-mod-sysvmsg php7-mod-sysvsem php7-mod-tokenizer php7-mod-xml php7-mod-xmlreader php7-mod-xmlwriter php7-mod-zip php7-pecl-raphf zoneinfo-core zoneinfo-asia"
 
@@ -377,12 +377,12 @@ remove_onmp()
     /opt/etc/init.d/S80nginx stop > /dev/null 2>&1
    # /opt/etc/init.d/S70redis stop > /dev/null 2>&1
    #killall -9 nginx mysqld php-fpm redis-server > /dev/null 2>&1
-    killall -9 nginx php-fpm  > /dev/null 2>&1
+    killall -9 nginx php7-fpm  > /dev/null 2>&1
     for pkg in $pkglist; do
-        opkg remove $pkg --force-depends
+        opkg remove $pkg --autoremove
     done
     for mod in $phpmod; do
-        opkg remove $mod --force-depends
+        opkg remove $mod --autoremove
     done
     rm -rf /opt/wwwroot
     rm -rf /opt/etc/nginx/vhost
